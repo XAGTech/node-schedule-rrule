@@ -33,6 +33,16 @@ module.exports = {
       test.deepEqual(new Date(Date.UTC(2010, 3, 29, 12, 30, 16, 0)), next);
       test.done();
     },
+    'dtstart is included when inclusive is true': function(test) {
+      let rule = new schedule.RecurrenceRule({
+        freq: RRule.MINUTELY,
+        dtstart: new Date(Date.UTC(2010, 3, 29, 12, 30, 15, 0)),
+      });
+      let next = rule.nextInvocationDate(base, true);
+
+      test.deepEqual(new Date(Date.UTC(2010, 3, 29, 12, 30, 15, 0)), next);
+      test.done();
+    },
     'next 25th second': function(test) {
       let rule = new schedule.RecurrenceRule({
         freq: RRule.MINUTELY,

@@ -50,7 +50,7 @@ module.exports = {
       clock.tick(3250);
     },
     'no endTime , startTime greater than now': function(test) {
-      test.expect(1);
+      test.expect(2);
 
       var job = new schedule.Job(function() {
         test.ok(true);
@@ -107,7 +107,7 @@ module.exports = {
       clock.tick(3250);
     },
     'has startTime and endTime': function(test) {
-      test.expect(1);
+      test.expect(2);
 
       var job = new schedule.Job(function() {
         test.ok(true);
@@ -147,7 +147,7 @@ module.exports = {
       clock.tick(3250);
     },
     'no endTime , startTime greater than now': function(test) {
-      test.expect(1);
+      test.expect(2);
 
       var job = new schedule.Job(function() {
         test.ok(true);
@@ -198,7 +198,7 @@ module.exports = {
       clock.tick(3250);
     },
     'has startTime and endTime': function(test) {
-      test.expect(1);
+      test.expect(2);
 
       var job = new schedule.Job(function() {
         test.ok(true);
