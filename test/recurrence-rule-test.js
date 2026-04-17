@@ -43,6 +43,19 @@ module.exports = {
       test.deepEqual(new Date(Date.UTC(2010, 3, 29, 12, 30, 15, 0)), next);
       test.done();
     },
+    'past dtstart keeps simple interval cadence when reset': function(test) {
+      let rule = new schedule.RecurrenceRule({
+        freq: RRule.SECONDLY,
+        interval: 30,
+        dtstart: new Date(Date.UTC(2010, 3, 29, 12, 30, 0, 0)),
+      });
+
+      rule.safelyResetStartDate();
+      let next = rule.nextInvocationDate(base);
+
+      test.deepEqual(new Date(Date.UTC(2010, 3, 29, 12, 30, 30, 0)), next);
+      test.done();
+    },
     'next 25th second': function(test) {
       let rule = new schedule.RecurrenceRule({
         freq: RRule.MINUTELY,
