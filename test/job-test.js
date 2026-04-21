@@ -61,7 +61,7 @@ module.exports = {
       clock.tick(3250);
     },
     'Cancel next job before it runs': function(test) {
-      test.expect(1);
+      test.expect(2);
 
       var job = new schedule.Job(function(d) {
         test.ok(true);
@@ -166,7 +166,7 @@ module.exports = {
   // },
   '#schedule(RecurrenceRule)': {
     'Runs job at interval based on recur rule, repeating indefinitely': function(test) {
-      test.expect(3);
+      test.expect(4);
 
       var job = new schedule.Job(function() {
         test.ok(true);
@@ -182,9 +182,10 @@ module.exports = {
       clock.tick(3250);
     },
     "Job emits 'scheduled' event for every next invocation": function(test) {
-      // Job will run 3 times but be scheduled 4 times, 4th run never happens
+      // The explicit DTSTART matches the fake clock start, so the job runs at t=0.
+      // Job will run 4 times but be scheduled 5 times, 5th run never happens
       // due to cancel.
-      test.expect(4);
+      test.expect(5);
 
       var job = new schedule.Job(function() {});
 
@@ -364,13 +365,13 @@ module.exports = {
       clock.tick(2250);
     },
     'Cancelled job reschedules': function(test) {
-      test.expect(2);
+      test.expect(3);
       /*
-        1. first occurrence
-        2. cancelled
-        3. first rescheduled occurrence
+        1. occurrence at DTSTART (t=0)
+        2. next occurrence before cancellation (t=1)
+        3. cancel(true) cancels the pending t=2 occurrence and reschedules to t=3
 
-        i.e. after 3 seconds we should see 2 occurrences
+        i.e. after 3.25 seconds we should see 3 occurrences
       */
       var ok = false;
       var job = schedule.scheduleJob(RR_EVERY_SECOND, function(d) {

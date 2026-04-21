@@ -69,7 +69,7 @@ module.exports = {
   },
   '.scheduleJob(RecurrenceRule, fn)': {
     'Runs job at interval based on recur rule, repeating indefinitely': function(test) {
-      test.expect(3);
+      test.expect(4);
 
       var job = schedule.scheduleJob(RR_EVERY_SECOND, function() {
         test.ok(true);
@@ -84,9 +84,9 @@ module.exports = {
     },
     "Job doesn't emit initial 'scheduled' event": function(test) {
       /*
-       * If this was Job#schedule it'd fire 4 times.
+       * The explicit DTSTART matches the fake clock start, so the job also runs at t=0.
        */
-      test.expect(3);
+      test.expect(4);
 
       var job = new schedule.scheduleJob(RR_EVERY_SECOND, function() {});
 
@@ -302,7 +302,7 @@ module.exports = {
   },
   '.rescheduleJob(job, RecurrenceRule)': {
     'Reschedule jobs from RecurrenceRule to RecurrenceRule': function(test) {
-      test.expect(3);
+      test.expect(4);
 
       var timeout = 60 * 1000;
 
@@ -322,7 +322,7 @@ module.exports = {
       clock.tick(timeout + 2250);
     },
     'Reschedule jobs from RecurrenceRule to Date': function(test) {
-      test.expect(3);
+      test.expect(4);
 
       var job = schedule.scheduleJob(RR_EVERY_SECOND, function() {
         test.ok(true);
@@ -339,7 +339,7 @@ module.exports = {
       clock.tick(4250);
     },
     'Reschedule jobs from RecurrenceRule to {...}': function(test) {
-      test.expect(3);
+      test.expect(4);
 
       var timeout = 60 * 1000;
 
@@ -361,7 +361,7 @@ module.exports = {
       clock.tick(timeout + 2150);
     },
     'Reschedule jobs that is not available': function(test) {
-      test.expect(4);
+      test.expect(5);
 
       var job = schedule.scheduleJob(RR_EVERY_SECOND, function() {
         test.ok(true);
@@ -471,7 +471,7 @@ module.exports = {
   },
   '.rescheduleJob("job name", RecurrenceRule)': {
     'Reschedule jobs from RecurrenceRule to RecurrenceRule': function(test) {
-      test.expect(3);
+      test.expect(4);
 
       var timeout = 60 * 1000;
 
@@ -491,7 +491,7 @@ module.exports = {
       clock.tick(timeout + 2250);
     },
     'Reschedule jobs from RecurrenceRule to Date': function(test) {
-      test.expect(3);
+      test.expect(4);
 
       var job = schedule.scheduleJob(RR_EVERY_SECOND, function() {
         test.ok(true);
@@ -508,7 +508,7 @@ module.exports = {
       clock.tick(4250);
     },
     'Reschedule jobs from RecurrenceRule to {...}': function(test) {
-      test.expect(3);
+      test.expect(4);
 
       var timeout = 60 * 1000;
 
@@ -530,7 +530,7 @@ module.exports = {
       clock.tick(timeout + 2150);
     },
     'Reschedule jobs that is not available': function(test) {
-      test.expect(4);
+      test.expect(5);
 
       var job = schedule.scheduleJob(RR_EVERY_SECOND, function() {
         test.ok(true);
