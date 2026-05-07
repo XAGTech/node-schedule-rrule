@@ -24,17 +24,24 @@ function parseDate(offsetMs) {
   return `${year}${month}${day}T${hour}${minute}${second}Z`;
 }
 
-module.exports = {
-  setUp: function(cb) {
+var assert = require('chai').assert;
+
+describe("start-end-test", function() {
+  beforeEach(function(cb) {
     clock = sinon.useFakeTimers(baseMs);
     cb();
-  },
-  RecurrenceRule: {
-    'no endTime , startTime less than now': function(test) {
-      test.expect(3);
+  });
 
+  afterEach(function(cb) {
+    clock.restore();
+    cb();
+  });
+
+  describe("RecurrenceRule", function() {
+    it('no endTime , startTime less than now', function(done) {
+      var runCount = 0;
       var job = new schedule.Job(function() {
-        test.ok(true);
+        runCount += 1;
       });
 
       job.schedule({
@@ -44,16 +51,17 @@ module.exports = {
 
       setTimeout(function() {
         job.cancel();
-        test.done();
+        assert.strictEqual(runCount, 3);
+        done();
       }, 3250);
 
       clock.tick(3250);
-    },
-    'no endTime , startTime greater than now': function(test) {
-      test.expect(2);
+    });
 
+    it('no endTime , startTime greater than now', function(done) {
+      var runCount = 0;
       var job = new schedule.Job(function() {
-        test.ok(true);
+        runCount += 1;
       });
 
       job.schedule({
@@ -63,16 +71,16 @@ module.exports = {
 
       setTimeout(function() {
         job.cancel();
-        test.done();
+        assert.strictEqual(runCount, 2);
+        done();
       }, 3250);
 
       clock.tick(3250);
-    },
-    'no startTime , endTime less than now': function(test) {
-      test.expect(0);
+    });
 
+    it('no startTime , endTime less than now', function(done) {
       var job = new schedule.Job(function() {
-        test.ok(true);
+        assert.fail('Job should not run when the end time is already in the past');
       });
 
       job.schedule({
@@ -82,16 +90,16 @@ module.exports = {
 
       setTimeout(function() {
         job.cancel();
-        test.done();
+        done();
       }, 3250);
 
       clock.tick(3250);
-    },
-    'no startTime , endTime greater than now': function(test) {
-      test.expect(2);
+    });
 
+    it('no startTime , endTime greater than now', function(done) {
+      var runCount = 0;
       var job = new schedule.Job(function() {
-        test.ok(true);
+        runCount += 1;
       });
 
       job.schedule({
@@ -101,16 +109,17 @@ module.exports = {
 
       setTimeout(function() {
         job.cancel();
-        test.done();
+        assert.strictEqual(runCount, 2);
+        done();
       }, 3250);
 
       clock.tick(3250);
-    },
-    'has startTime and endTime': function(test) {
-      test.expect(2);
+    });
 
+    it('has startTime and endTime', function(done) {
+      var runCount = 0;
       var job = new schedule.Job(function() {
-        test.ok(true);
+        runCount += 1;
       });
 
       job.schedule({
@@ -121,19 +130,19 @@ module.exports = {
 
       setTimeout(function() {
         job.cancel();
-        test.done();
+        assert.strictEqual(runCount, 2);
+        done();
       }, 3250);
 
       clock.tick(3250);
-    },
-  },
+    });
+  });
 
-  'iCal-string': {
-    'no endTime , startTime less than now': function(test) {
-      test.expect(3);
-
+  describe('iCal-string', function() {
+    it('no endTime , startTime less than now', function(done) {
+      var runCount = 0;
       var job = new schedule.Job(function() {
-        test.ok(true);
+        runCount += 1;
       });
 
       const start = parseDate(-2000);
@@ -141,16 +150,17 @@ module.exports = {
 
       setTimeout(function() {
         job.cancel();
-        test.done();
+        assert.strictEqual(runCount, 3);
+        done();
       }, 3250);
 
       clock.tick(3250);
-    },
-    'no endTime , startTime greater than now': function(test) {
-      test.expect(2);
+    });
 
+    it('no endTime , startTime greater than now', function(done) {
+      var runCount = 0;
       var job = new schedule.Job(function() {
-        test.ok(true);
+        runCount += 1;
       });
 
       const start = parseDate(+2000);
@@ -158,16 +168,16 @@ module.exports = {
 
       setTimeout(function() {
         job.cancel();
-        test.done();
+        assert.strictEqual(runCount, 2);
+        done();
       }, 3250);
 
       clock.tick(3250);
-    },
-    'no startTime , endTime less than now': function(test) {
-      test.expect(0);
+    });
 
+    it('no startTime , endTime less than now', function(done) {
       var job = new schedule.Job(function() {
-        test.ok(true);
+        assert.fail('Job should not run when the RRULE end time is already in the past');
       });
 
       const end = parseDate(-2000);
@@ -175,16 +185,16 @@ module.exports = {
 
       setTimeout(function() {
         job.cancel();
-        test.done();
+        done();
       }, 3250);
 
       clock.tick(3250);
-    },
-    'no startTime , endTime greater than now': function(test) {
-      test.expect(2);
+    });
 
+    it('no startTime , endTime greater than now', function(done) {
+      var runCount = 0;
       var job = new schedule.Job(function() {
-        test.ok(true);
+        runCount += 1;
       });
 
       const end = parseDate(+2000);
@@ -192,16 +202,17 @@ module.exports = {
 
       setTimeout(function() {
         job.cancel();
-        test.done();
+        assert.strictEqual(runCount, 2);
+        done();
       }, 3250);
 
       clock.tick(3250);
-    },
-    'has startTime and endTime': function(test) {
-      test.expect(2);
+    });
 
+    it('has startTime and endTime', function(done) {
+      var runCount = 0;
       var job = new schedule.Job(function() {
-        test.ok(true);
+        runCount += 1;
       });
 
       const start = parseDate(+1000);
@@ -210,14 +221,11 @@ module.exports = {
 
       setTimeout(function() {
         job.cancel();
-        test.done();
+        assert.strictEqual(runCount, 2);
+        done();
       }, 3250);
 
       clock.tick(3250);
-    },
-  },
-  tearDown: function(cb) {
-    clock.restore();
-    cb();
-  },
-};
+    });
+  });
+});
