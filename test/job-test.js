@@ -18,213 +18,208 @@ try {
 
 var clock;
 
-module.exports = {
-  setUp: function(cb) {
+var assert = require('chai').assert;
+
+describe("job-test", function() {
+  beforeEach(function(cb) {
     clock = sinon.useFakeTimers();
     cb();
-  },
-  'Job constructor': {
-    'Accepts Job name and function to run': function(test) {
+  });
+
+  afterEach(function(cb) {
+    clock.restore();
+    cb();
+  });
+
+  describe('Job constructor', function() {
+    it('Accepts Job name and function to run', function(done) {
       var job = new schedule.Job('the job', function() {});
 
-      test.equal(job.name, 'the job');
-      test.done();
-    },
-    'Job name is optional and will be auto-generated': function(test) {
+      assert.equal(job.name, 'the job');
+      done();
+    });
+
+    it('Job name is optional and will be auto-generated', function(done) {
       var job = new schedule.Job(function() {});
 
-      test.ok(job.name);
-      test.done();
-    },
-    'Uses unique names across auto-generated Job names': function(test) {
+      assert.ok(job.name);
+      done();
+    });
+
+    it('Uses unique names across auto-generated Job names', function(done) {
       var job1 = new schedule.Job(function() {});
       var job2 = new schedule.Job(function() {});
 
-      test.notEqual(job1.name, job2.name);
-      test.done();
-    },
-  },
-  '#schedule(Date)': {
-    'Runs job once at some date': function(test) {
-      test.expect(1);
+      assert.notEqual(job1.name, job2.name);
+      done();
+    });
+  });
 
+  describe('#schedule(Date)', function() {
+    it('Runs job once at some date', function(done) {
+      var runCount = 0;
       var job = new schedule.Job(function() {
-        test.ok(true);
+        runCount += 1;
       });
 
       job.schedule(new Date(Date.now() + 3000));
 
       setTimeout(function() {
-        test.done();
+        assert.strictEqual(runCount, 1);
+        done();
       }, 3250);
 
       clock.tick(3250);
-    },
-    'Cancel next job before it runs': function(test) {
-      test.expect(2);
+    });
 
-      var job = new schedule.Job(function(d) {
-        test.ok(true);
+    it('Cancel next job before it runs', function(done) {
+      var runCount = 0;
+      var job = new schedule.Job(function() {
+        runCount += 1;
       });
 
       job.schedule(RR_EVERY_OTHER_SECOND);
 
       setTimeout(function() {
         job.cancel();
-        test.done();
+        assert.strictEqual(runCount, 2);
+        done();
       }, 3250);
 
       clock.tick(3250);
-    },
-    'Run job on specified date': function(test) {
-      test.expect(1);
+    });
 
+    it('Run job on specified date', function(done) {
+      var runCount = 0;
       var job = new schedule.Job(function() {
-        test.ok(true);
+        runCount += 1;
       });
 
       job.schedule(new Date(Date.now() + 3000));
 
       setTimeout(function() {
-        test.done();
+        assert.strictEqual(runCount, 1);
+        done();
       }, 3250);
 
       clock.tick(3250);
-    },
-    "Won't run job if scheduled in the past": function(test) {
-      test.expect(0);
+    });
 
+    it("Won't run job if scheduled in the past", function(done) {
       var job = new schedule.Job(function() {
-        test.ok(false);
+        assert.fail('Job should not run when scheduled in the past');
       });
 
       job.schedule(new Date(Date.now() - 3000));
 
       setTimeout(function() {
-        test.done();
+        done();
       }, 1000);
 
       clock.tick(1000);
-    },
-    'Jobs still run after scheduling a Job in the past': function(test) {
-      test.expect(1);
+    });
 
+    it('Jobs still run after scheduling a Job in the past', function(done) {
+      var runCount = 0;
       var pastJob = new schedule.Job(function() {
-        // Should not run, blow up if it does
-        test.ok(false);
+        assert.fail('Past-scheduled job should not run');
       });
 
       pastJob.schedule(new Date(Date.now() - 3000));
 
       var job = new schedule.Job(function() {
-        test.ok(true);
+        runCount += 1;
       });
 
       job.schedule(new Date(Date.now() + 3000));
 
       setTimeout(function() {
-        test.done();
+        assert.strictEqual(runCount, 1);
+        done();
       }, 3250);
 
       clock.tick(3250);
-    },
-    "Job emits 'scheduled' event with 'run at' Date": function(test) {
-      test.expect(1);
+    });
+
+    it("Job emits 'scheduled' event with 'run at' Date", function(done) {
 
       var date = new Date(Date.now() + 3000);
       var job = new schedule.Job(function() {
-        test.done();
+        done();
       });
 
       job.on('scheduled', function(runAtDate) {
-        test.equal(runAtDate.getTime(), date.getTime());
+        assert.equal(runAtDate.getTime(), date.getTime());
       });
 
       job.schedule(date);
       clock.tick(3250);
-    },
-  },
-  // '#schedule(Date, fn)': {
-  //   'Runs job once at some date, calls callback when done': function(test) {
-  //     test.expect(1);
+    });
+  });
 
-  //     var job = new schedule.Job(
-  //       function() {},
-  //       function() {
-  //         test.ok(true);
-  //       }
-  //     );
-
-  //     job.schedule(new Date(Date.now() + 3000));
-
-  //     setTimeout(function() {
-  //       test.done();
-  //     }, 3250);
-
-  //     clock.tick(3250);
-  //   },
-  // },
-  '#schedule(RecurrenceRule)': {
-    'Runs job at interval based on recur rule, repeating indefinitely': function(test) {
-      test.expect(4);
-
+  describe('#schedule(RecurrenceRule)', function() {
+    it('Runs job at interval based on recur rule, repeating indefinitely', function(done) {
+      var runCount = 0;
       var job = new schedule.Job(function() {
-        test.ok(true);
+        runCount += 1;
       });
 
       job.schedule(RR_EVERY_SECOND);
 
       setTimeout(function() {
         job.cancel();
-        test.done();
+        assert.strictEqual(runCount, 4);
+        done();
       }, 3250);
 
       clock.tick(3250);
-    },
-    "Job emits 'scheduled' event for every next invocation": function(test) {
+    });
+
+    it("Job emits 'scheduled' event for every next invocation", function(done) {
       // The explicit DTSTART matches the fake clock start, so the job runs at t=0.
       // Job will run 4 times but be scheduled 5 times, 5th run never happens
       // due to cancel.
-      test.expect(5);
 
+      var scheduledCount = 0;
       var job = new schedule.Job(function() {});
 
-      job.on('scheduled', function(runOnDate) {
-        test.ok(true);
+      job.on('scheduled', function() {
+        scheduledCount += 1;
       });
 
       job.schedule(RR_EVERY_SECOND);
 
       setTimeout(function() {
         job.cancel();
-        test.done();
+        assert.strictEqual(scheduledCount, 5);
+        done();
       }, 3250);
 
       clock.tick(3250);
-    },
-    "Doesn't invoke job if recur rule schedules it in the past": function(test) {
-      test.expect(0);
+    });
+
+    it("Doesn't invoke job if recur rule schedules it in the past", function(done) {
 
       var job = new schedule.Job(function() {
-        test.ok(false);
+        assert.fail('Recurring rule scheduled entirely in the past should not run');
       });
 
       job.schedule(RR_UNTIL_1960);
 
       setTimeout(function() {
         job.cancel();
-        test.done();
+        done();
       }, 1000);
 
       clock.tick(1000);
-    },
-  },
-  '#schedule({...})': {
-    'Runs job at interval based on object, repeating indefinitely': function(test) {
-      test.expect(3);
+    });
+  });
 
+  describe('#schedule({...})', function() {
+    it('Runs job at interval based on object, repeating indefinitely', function(done) {
+      var runCount = 0;
       var job = new schedule.Job(function() {
-        test.ok(true);
+        runCount += 1;
       });
 
       job.schedule({
@@ -233,20 +228,22 @@ module.exports = {
 
       setTimeout(function() {
         job.cancel();
-        test.done();
+        assert.strictEqual(runCount, 3);
+        done();
       }, 3250);
 
       clock.tick(3250);
-    },
-    "Job emits 'scheduled' event for every next invocation": function(test) {
+    });
+
+    it("Job emits 'scheduled' event for every next invocation", function(done) {
       // Job will run 3 times but be scheduled 4 times, 4th run never happens
       // due to cancel.
-      test.expect(4);
 
+      var scheduledCount = 0;
       var job = new schedule.Job(function() {});
 
-      job.on('scheduled', function(runOnDate) {
-        test.ok(true);
+      job.on('scheduled', function() {
+        scheduledCount += 1;
       });
 
       job.schedule({
@@ -255,34 +252,36 @@ module.exports = {
 
       setTimeout(function() {
         job.cancel();
-        test.done();
+        assert.strictEqual(scheduledCount, 4);
+        done();
       }, 3250);
 
       clock.tick(3250);
-    },
-    "Doesn't invoke job if object schedules it in the past": function(test) {
-      test.expect(0);
+    });
+
+    it("Doesn't invoke job if object schedules it in the past", function(done) {
 
       var job = new schedule.Job(function() {
-        test.ok(false);
+        assert.fail('Object schedule in the past should not run');
       });
 
       job.schedule(new Date('1960-01-01'));
 
       setTimeout(function() {
         job.cancel();
-        test.done();
+        done();
       }, 1000);
 
       clock.tick(1000);
-    },
-  },
-  "#schedule('jobName', {...})": {
-    'Runs job with a custom name input': function(test) {
-      test.expect(3);
+    });
+  });
 
+  describe("#schedule('jobName', {...})", function() {
+    it('Runs job with a custom name input', function(done) {
+      var runCount = 0;
       var job = new schedule.Job('jobName', function() {
-        test.equal(job.name, 'jobName');
+        runCount += 1;
+        assert.equal(job.name, 'jobName');
       });
 
       job.schedule({
@@ -291,63 +290,19 @@ module.exports = {
 
       setTimeout(function() {
         job.cancel();
-        test.done();
+        assert.strictEqual(runCount, 3);
+        done();
       }, 3250);
 
       clock.tick(3250);
-    },
-  },
-  // '#schedule({...}, {...})': {
-  // 'Runs job and run callback when job is done if callback is provided': function(test) {
-  //   test.expect(3);
+    });
+  });
 
-  //   var job = new schedule.Job(
-  //     function() {},
-  //     function() {
-  //       test.ok(true);
-  //     }
-  //   );
-
-  //   job.schedule({
-  //     second: null, // fire every second
-  //   });
-
-  //   setTimeout(function() {
-  //     job.cancel();
-  //     test.done();
-  //   }, 3250);
-
-  //   clock.tick(3250);
-  // },
-  //   'Runs job with a custom name input and run callback when job is done': function(test) {
-  //     test.expect(3);
-
-  //     var job = new schedule.Job(
-  //       'MyJob',
-  //       function() {},
-  //       function() {
-  //         test.equal(job.name, 'MyJob');
-  //       }
-  //     );
-
-  //     job.schedule({
-  //       second: null, // fire every second
-  //     });
-
-  //     setTimeout(function() {
-  //       job.cancel();
-  //       test.done();
-  //     }, 3250);
-
-  //     clock.tick(3250);
-  //   },
-  // },
-  '#cancel': {
-    'Prevents all future invocations': function(test) {
-      test.expect(1);
-
+  describe('#cancel', function() {
+    it('Prevents all future invocations', function(done) {
+      var runCount = 0;
       var job = new schedule.Job(function() {
-        test.ok(true);
+        runCount += 1;
       });
 
       job.schedule({
@@ -359,13 +314,14 @@ module.exports = {
       }, 1250);
 
       setTimeout(function() {
-        test.done();
+        assert.strictEqual(runCount, 1);
+        done();
       }, 2250);
 
       clock.tick(2250);
-    },
-    'Cancelled job reschedules': function(test) {
-      test.expect(3);
+    });
+
+    it('Cancelled job reschedules', function(done) {
       /*
         1. occurrence at DTSTART (t=0)
         2. next occurrence before cancellation (t=1)
@@ -373,9 +329,9 @@ module.exports = {
 
         i.e. after 3.25 seconds we should see 3 occurrences
       */
-      var ok = false;
-      var job = schedule.scheduleJob(RR_EVERY_SECOND, function(d) {
-        test.ok(true);
+      var runCount = 0;
+      var job = schedule.scheduleJob(RR_EVERY_SECOND, function() {
+        runCount += 1;
       });
 
       setTimeout(function() {
@@ -384,13 +340,14 @@ module.exports = {
 
       setTimeout(function() {
         job.cancel();
-        test.done();
+        assert.strictEqual(runCount, 3);
+        done();
       }, 3250);
 
       clock.tick(3250);
-    },
-    'Cancelled job without rescheduling': function(test) {
-      test.expect(1);
+    });
+
+    it('Cancelled job without rescheduling', function(done) {
       var ok = false;
 
       var job = schedule.scheduleJob(RR_EVERY_SECOND, function() {});
@@ -402,20 +359,20 @@ module.exports = {
 
       setTimeout(function() {
         job.cancel();
-        test.ok(ok);
-        test.done();
+        assert.ok(ok);
+        done();
       }, 2250);
 
       clock.tick(2250);
-    },
+    });
 
-    "Job emits 'canceled' event": function(test) {
-      test.expect(1);
+    it("Job emits 'canceled' event", function(done) {
 
+      var canceledCount = 0;
       var job = new schedule.Job(function() {});
 
       job.on('canceled', function() {
-        test.ok(true);
+        canceledCount += 1;
       });
 
       job.schedule({
@@ -427,13 +384,14 @@ module.exports = {
       }, 1250);
 
       setTimeout(function() {
-        test.done();
+        assert.strictEqual(canceledCount, 1);
+        done();
       }, 2250);
 
       clock.tick(2250);
-    },
-    'Job is added to scheduledJobs when created and removed when cancelled': function(test) {
-      test.expect(4);
+    });
+
+    it('Job is added to scheduledJobs when created and removed when cancelled', function(done) {
 
       var job1 = new schedule.Job('cancelJob', function() {});
       job1.schedule(
@@ -451,86 +409,48 @@ module.exports = {
         function() {}
       );
 
-      test.strictEqual(schedule.scheduledJobs.cancelJob, job1);
-      test.strictEqual(schedule.scheduledJobs.second, job2);
+      assert.strictEqual(schedule.scheduledJobs.cancelJob, job1);
+      assert.strictEqual(schedule.scheduledJobs.second, job2);
       setTimeout(function() {
         job1.cancel();
         job2.cancel();
-        test.strictEqual(schedule.scheduledJobs.cancelJob, undefined);
-        test.strictEqual(schedule.scheduledJobs.second, undefined);
-        test.done();
+        assert.strictEqual(schedule.scheduledJobs.cancelJob, undefined);
+        assert.strictEqual(schedule.scheduledJobs.second, undefined);
+        done();
       }, 1250);
 
       clock.tick(1250);
-    },
-  },
-  // triggeredJobs not implemented in rrule-version
-  // '#reschedule': {
-  //   'When rescheduled counter will be reset to zero': function(test) {
-  //     var job = new schedule.scheduleJob(
-  //       {
-  //         second: null,
-  //       },
-  //       function() {}
-  //     );
+    });
+  });
 
-  //     setTimeout(function() {
-  //       test.equal(job.triggeredJobs(), 3);
-  //       schedule.rescheduleJob(job, {
-  //         minute: null,
-  //       });
-  //     }, 3250);
-
-  //     setTimeout(function() {
-  //       job.cancel();
-  //       test.equal(job.triggeredJobs(), 0);
-  //       test.done();
-  //     }, 5000);
-
-  //     clock.tick(5000);
-  //   },
-  // },
-  'When invoked': {
-    "Job emits 'run' event": function(test) {
-      test.expect(1);
-
+  describe('When invoked', function() {
+    it("Job emits 'run' event", function(done) {
+      var runEventCount = 0;
       var job = new schedule.Job(function() {});
 
       job.on('run', function() {
-        test.ok(true);
+        runEventCount += 1;
       });
 
       job.schedule(new Date(Date.now() + 3000));
 
       setTimeout(function() {
-        test.done();
+        assert.strictEqual(runEventCount, 1);
+        done();
       }, 3250);
 
       clock.tick(3250);
-    },
-    // 'Job counter increase properly': function(test) {
-    //   var job = new schedule.Job(function() {});
+    });
 
-    //   job.schedule({
-    //     freq: RRule.SECONDLY,
-    //   });
-
-    //   setTimeout(function() {
-    //     job.cancel();
-    //     test.equal(job.triggeredJobs(), 2);
-    //     test.done();
-    //   }, 2250);
-
-    //   clock.tick(2250);
-    // },
-    'Job gets invoked with the fire date': function(test) {
-      test.expect(2);
+    it('Job gets invoked with the fire date', function(done) {
+      var invocationCount = 0;
       var prevFireDate;
       var job = new schedule.Job(function(fireData) {
+        invocationCount += 1;
         if (!prevFireDate) {
-          test.ok(fireData.invocationDate instanceof Date);
+          assert.ok(fireData.invocationDate instanceof Date);
         } else {
-          test.equal(fireData.invocationDate.getTime() - prevFireDate.getTime(), 1000);
+          assert.equal(fireData.invocationDate.getTime() - prevFireDate.getTime(), 1000);
         }
         prevFireDate = fireData.invocationDate;
       });
@@ -541,14 +461,11 @@ module.exports = {
 
       setTimeout(function() {
         job.cancel();
-        test.done();
+        assert.strictEqual(invocationCount, 2);
+        done();
       }, 2250);
 
       clock.tick(2250);
-    },
-  },
-  tearDown: function(cb) {
-    clock.restore();
-    cb();
-  },
-};
+    });
+  });
+});
